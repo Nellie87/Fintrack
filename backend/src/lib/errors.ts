@@ -7,6 +7,7 @@ export type ErrorCode =
   | "NOT_FOUND"
   | "EMAIL_TAKEN"
   | "INSUFFICIENT_HOLDINGS"
+  | "CONFLICT"
   | "INTERNAL_ERROR";
 
 export type ErrorDetail = { field: string; message: string };
@@ -52,6 +53,10 @@ function toResponse(err: unknown): Response {
       message: issue.message,
     }));
     return errorResponse(422, "VALIDATION_ERROR", "The request has invalid fields.", details);
+  }
+  // Prisma P2034: a serializable transaction lost a race with another request.
+  if (typeof err === "object" && err !== null && "code" in err && err.code === "P2034") {
+    return errorResponse(409, "CONFLICT", "Another change was saved at the same time. Please try again.");
   }
   // Unknown failure: log it server-side, never leak the stack trace to the client.
   console.error(err);
