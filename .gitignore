@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+
+# builds
+dist/
+.next/
+out/
+build/
+coverage/
+
+# env files (commit only .env.example)
+.env
+.env.*
+!.env.example
+
+# misc
+.DS_Store
+*.log
+.vercel
