@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Currency {
+  KES
+  USD
+}
+
+enum TransactionType {
+  BUY
+  SELL
+}
+
+/// An analyst who logs in and owns portfolios.
+model User {
+  id           Int         @id @default(autoincrement())
+  name         String
+  email        String      @unique
+  passwordHash String      @map("password_hash")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  portfolios   Portfolio[]
+
+  @@map("users")
+}
+
+/// A client portfolio. Each one belongs to exactly one analyst.
+model Portfolio {
+  id           Int           @id @default(autoincrement())
+  userId       Int           @map("user_id")
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  clientName   String        @map("client_name")
+  baseCurrency Currency      @map("base_currency")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  transactions Transaction[]
+
+  @@index([userId])
+  @@map("portfolios")
+}
+
+/// A BUY or SELL of one instrument. Money and quantities are exact decimals, never floats.
+model Transaction {
+  id          Int             @id @default(autoincrement())
+  portfolioId Int             @map("portfolio_id")
+  portfolio   Portfolio       @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  instrument  String
+  type        TransactionType
+  quantity    Decimal         @db.Decimal(18, 4)
+  unitPrice   Decimal         @map("unit_price") @db.Decimal(18, 4)
+  tradeDate   DateTime        @map("trade_date") @db.Date
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  @@index([portfolioId, tradeDate])
+  @@map("transactions")
+}
