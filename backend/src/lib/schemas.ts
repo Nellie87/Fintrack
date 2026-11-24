@@ -26,5 +26,21 @@ export const loginSchema = z.object({
   password: z.string({ error: "Password is required." }).min(1, { error: "Password is required." }),
 });
 
+/** Used for both POST (create) and PUT (full update) of a portfolio. */
+export const portfolioSchema = z.object({
+  name: z
+    .string({ error: "Portfolio name is required." })
+    .trim()
+    .min(1, { error: "Portfolio name is required." })
+    .max(100, { error: "Portfolio name must be at most 100 characters." }),
+  clientName: z
+    .string({ error: "Client name is required." })
+    .trim()
+    .min(1, { error: "Client name is required." })
+    .max(100, { error: "Client name must be at most 100 characters." }),
+  baseCurrency: z.enum(["KES", "USD"], { error: "Base currency must be KES or USD." }),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type PortfolioInput = z.infer<typeof portfolioSchema>;
