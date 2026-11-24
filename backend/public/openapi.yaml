@@ -1,0 +1,469 @@
+openapi: 3.0.3
+info:
+  title: FinTrack API
+  version: 1.0.0
+  description: |
+    REST API for **FinTrack by Finnet Technologies**: register analysts, manage client
+    portfolios, record BUY/SELL transactions and get a holdings summary.
+
+    **Authentication:** call `POST /api/auth/login` (demo: `demo@fintrack.app` / `Demo@2026`),
+    copy the `token`, click **Authorize** and paste it. Every endpoint except register,
+    login and health needs `Authorization: Bearer <token>`.
+
+    **Errors** always use the same shape: `{ "error": { "code", "message", "details"? } }`.
+
+    **Holdings maths:** weighted average cost. Market price is the most recent trade price
+    for the instrument (there is no live price feed).
+servers:
+  - url: /
+    description: This server
+
+tags:
+  - name: Auth
+  - name: Portfolios
+  - name: Transactions
+  - name: Summary
+  - name: Health
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/health:
+    get:
+      tags: [Health]
+      summary: Health check
+      security: []
+      responses:
+        "200":
+          description: The API is running.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register an analyst
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterInput" }
+      responses:
+        "201":
+          description: Registered and logged in.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "409":
+          description: Email already registered.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example:
+                error:
+                  code: EMAIL_TAKEN
+                  message: An account with this email already exists.
+                  details: [{ field: email, message: This email is already registered. }]
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginInput" }
+            example: { email: demo@fintrack.app, password: Demo@2026 }
+      responses:
+        "200":
+          description: Logged in.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401":
+          description: Wrong email or password (same message for both).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example: { error: { code: UNAUTHORIZED, message: Incorrect email or password. } }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Current analyst
+      responses:
+        "200":
+          description: The logged-in analyst.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/portfolios:
+    get:
+      tags: [Portfolios]
+      summary: List my portfolios (newest first)
+      responses:
+        "200":
+          description: The analyst's portfolios.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PortfolioListItem" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Portfolios]
+      summary: Create a portfolio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PortfolioInput" }
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Portfolio" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /api/portfolios/{id}:
+    parameters:
+      - $ref: "#/components/parameters/PortfolioId"
+    get:
+      tags: [Portfolios]
+      summary: Get a portfolio
+      responses:
+        "200":
+          description: The portfolio.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Portfolio" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Portfolios]
+      summary: Update a portfolio (all fields)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PortfolioInput" }
+      responses:
+        "200":
+          description: Updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Portfolio" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+    delete:
+      tags: [Portfolios]
+      summary: Delete a portfolio and its transactions
+      responses:
+        "204": { description: Deleted. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/portfolios/{id}/transactions:
+    parameters:
+      - $ref: "#/components/parameters/PortfolioId"
+    get:
+      tags: [Transactions]
+      summary: List a portfolio's transactions (newest trade first)
+      responses:
+        "200":
+          description: The transactions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Transaction" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      tags: [Transactions]
+      summary: Record a BUY or SELL
+      description: |
+        The portfolio's history is replayed in trade-date order with the new trade included.
+        A SELL larger than the holding on its trade date (including a back-dated sell before
+        the matching buy) is rejected with `422 INSUFFICIENT_HOLDINGS`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TransactionInput" }
+      responses:
+        "201":
+          description: Recorded.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Transaction" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422":
+          description: Invalid fields, or a sell exceeds holdings.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                insufficientHoldings:
+                  summary: Selling more than held
+                  value:
+                    error:
+                      code: INSUFFICIENT_HOLDINGS
+                      message: "Cannot sell 500 SCOM: only 300 held on 2026-11-20."
+                      details: [{ field: quantity, message: Exceeds holding of 300. }]
+                validation:
+                  summary: Invalid fields
+                  value:
+                    error:
+                      code: VALIDATION_ERROR
+                      message: The request has invalid fields.
+                      details: [{ field: quantity, message: Quantity must be greater than 0. }]
+
+  /api/transactions/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer, minimum: 1 }
+    delete:
+      tags: [Transactions]
+      summary: Delete a transaction
+      description: Rejected with `422 INSUFFICIENT_HOLDINGS` if a later sell depends on this trade.
+      responses:
+        "204": { description: Deleted. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "422":
+          description: A later sell depends on this trade.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              example:
+                error:
+                  code: INSUFFICIENT_HOLDINGS
+                  message: "This trade can't be deleted because a later sell depends on it. Cannot sell 1200 SCOM: only 500 held on 2026-10-20."
+
+  /api/portfolios/{id}/summary:
+    parameters:
+      - $ref: "#/components/parameters/PortfolioId"
+    get:
+      tags: [Summary]
+      summary: Holdings summary
+      description: |
+        Open positions (net quantity > 0), largest value first.
+        `totalInvested = netQuantity × averageCost`, `totalValue = netQuantity × marketPrice`,
+        `marketPrice` = latest trade price, `gainPct = gain ÷ totalInvested × 100`.
+      responses:
+        "200":
+          description: The summary.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Summary" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    PortfolioId:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+
+  responses:
+    BadRequest:
+      description: The body is not valid JSON.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: { code: BAD_REQUEST, message: Request body must be valid JSON. } }
+    Unauthorized:
+      description: Missing, expired or invalid token.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: { code: UNAUTHORIZED, message: Missing or invalid token. Please log in again. } }
+    NotFound:
+      description: Not found, or it belongs to another analyst.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: { code: NOT_FOUND, message: Portfolio not found. } }
+    Conflict:
+      description: Another change was saved at the same moment; retry.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example: { error: { code: CONFLICT, message: Another change was saved at the same time. Please try again. } }
+    ValidationError:
+      description: One or more fields are invalid.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+          example:
+            error:
+              code: VALIDATION_ERROR
+              message: The request has invalid fields.
+              details: [{ field: email, message: Enter a valid email address. }]
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum: [BAD_REQUEST, VALIDATION_ERROR, UNAUTHORIZED, NOT_FOUND, EMAIL_TAKEN, INSUFFICIENT_HOLDINGS, CONFLICT, INTERNAL_ERROR]
+            message: { type: string }
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field: { type: string }
+                  message: { type: string }
+
+    User:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        name: { type: string, example: Demo Analyst }
+        email: { type: string, format: email, example: demo@fintrack.app }
+
+    RegisterInput:
+      type: object
+      required: [name, email, password]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 100, example: Jane Analyst }
+        email: { type: string, format: email, example: jane@example.com }
+        password: { type: string, minLength: 8, maxLength: 72, example: Passw0rd! }
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+
+    AuthResponse:
+      type: object
+      properties:
+        token: { type: string, description: "JWT; send as Authorization: Bearer <token>" }
+        user: { $ref: "#/components/schemas/User" }
+
+    Currency:
+      type: string
+      enum: [KES, USD]
+
+    PortfolioInput:
+      type: object
+      required: [name, clientName, baseCurrency]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100, example: Growth Equity }
+        clientName: { type: string, minLength: 1, maxLength: 100, example: Acacia Family Trust }
+        baseCurrency: { $ref: "#/components/schemas/Currency" }
+
+    Portfolio:
+      type: object
+      properties:
+        id: { type: integer, example: 7 }
+        name: { type: string, example: Growth Equity }
+        clientName: { type: string, example: Acacia Family Trust }
+        baseCurrency: { $ref: "#/components/schemas/Currency" }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    PortfolioListItem:
+      allOf:
+        - $ref: "#/components/schemas/Portfolio"
+        - type: object
+          properties:
+            transactionCount: { type: integer, example: 9 }
+
+    TransactionInput:
+      type: object
+      required: [instrument, type, quantity, unitPrice, tradeDate]
+      properties:
+        instrument:
+          type: string
+          pattern: "^[A-Za-z0-9][A-Za-z0-9.-]{0,19}$"
+          description: Ticker; stored in upper case.
+          example: SCOM
+        type: { type: string, enum: [BUY, SELL] }
+        quantity: { type: number, exclusiveMinimum: true, minimum: 0, example: 1000 }
+        unitPrice: { type: number, exclusiveMinimum: true, minimum: 0, example: 16.5 }
+        tradeDate: { type: string, format: date, example: "2026-11-20", description: Not in the future. }
+
+    Transaction:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        portfolioId: { type: integer, example: 7 }
+        instrument: { type: string, example: SCOM }
+        type: { type: string, enum: [BUY, SELL] }
+        quantity: { type: number, example: 1000 }
+        unitPrice: { type: number, example: 16.5 }
+        total: { type: number, description: quantity × unitPrice, example: 16500 }
+        tradeDate: { type: string, format: date, example: "2026-11-20" }
+        createdAt: { type: string, format: date-time }
+
+    Holding:
+      type: object
+      properties:
+        instrument: { type: string, example: SCOM }
+        netQuantity: { type: number, example: 1200 }
+        averageCost: { type: number, example: 17.2 }
+        totalInvested: { type: number, example: 20640 }
+        marketPrice: { type: number, example: 19 }
+        totalValue: { type: number, example: 22800 }
+        gain: { type: number, example: 2160 }
+        gainPct: { type: number, example: 10.47 }
+
+    Summary:
+      type: object
+      properties:
+        portfolioId: { type: integer, example: 7 }
+        currency: { $ref: "#/components/schemas/Currency" }
+        holdings:
+          type: array
+          items: { $ref: "#/components/schemas/Holding" }
+        totals:
+          type: object
+          properties:
+            totalInvested: { type: number, example: 28240 }
+            totalValue: { type: number, example: 30000 }
+            gain: { type: number, example: 1760 }
+            gainPct: { type: number, example: 6.23 }
