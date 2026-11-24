@@ -41,6 +41,32 @@ export const portfolioSchema = z.object({
   baseCurrency: z.enum(["KES", "USD"], { error: "Base currency must be KES or USD." }),
 });
 
+/** Latest allowed trade date: tomorrow (UTC), so "today" works in every timezone, including EAT. */
+const latestTradeDate = () => new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+export const transactionSchema = z.object({
+  instrument: z
+    .string({ error: "Instrument is required." })
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-Z0-9][A-Z0-9.-]{0,19}$/, {
+      error: "Instrument must be a ticker such as SCOM, KCB or T-BILL-91.",
+    }),
+  type: z.enum(["BUY", "SELL"], { error: "Type must be BUY or SELL." }),
+  quantity: z
+    .number({ error: "Quantity must be a number." })
+    .positive({ error: "Quantity must be greater than 0." })
+    .max(1e12, { error: "Quantity is too large." }),
+  unitPrice: z
+    .number({ error: "Unit price must be a number." })
+    .positive({ error: "Unit price must be greater than 0." })
+    .max(1e12, { error: "Unit price is too large." }),
+  tradeDate: z.iso
+    .date({ error: "Trade date must be a date in YYYY-MM-DD format." })
+    .refine((d) => d <= latestTradeDate(), { error: "Trade date cannot be in the future." }),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
+export type TransactionInput = z.infer<typeof transactionSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type PortfolioInput = z.infer<typeof portfolioSchema>;
