@@ -227,3 +227,112 @@
     padding: var(--space-6) var(--space-4);
   }
 }
+
+/* ---------- Loading / empty / error states ---------- */
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-10) var(--space-4);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+.state--loading {
+  flex-direction: row;
+  justify-content: center;
+}
+.state--empty,
+.state--error {
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+}
+.state--error {
+  border-style: solid;
+  border-color: rgb(180 35 24 / 0.3);
+}
+.state__title {
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+.state__body {
+  max-width: 32rem;
+}
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
+  }
+}
+
+/* ---------- Modal / confirm ---------- */
+.modal {
+  width: min(32rem, calc(100vw - 2 * var(--space-4)));
+  max-height: calc(100vh - 2 * var(--space-8));
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  color: var(--color-text);
+}
+.modal::backdrop {
+  background: rgb(7 26 51 / 0.55);
+}
+.modal__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-6);
+}
+.modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.modal__close {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-size: var(--text-xl);
+  line-height: 1;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+.modal__close:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+.modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.confirm__body {
+  color: var(--color-text-muted);
+}
+.confirm__body strong {
+  color: var(--color-text);
+}
