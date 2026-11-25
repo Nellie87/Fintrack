@@ -365,7 +365,7 @@
 /* ---------- Portfolio list ---------- */
 .portfolio-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
   gap: var(--space-4);
   margin: 0;
   padding: 0;
@@ -762,5 +762,83 @@ th.num .sort-button {
   }
   .allocation__chart {
     max-width: 220px;
+  }
+}
+
+/* ---------- Small screens (checked at 375px; the page itself must never scroll sideways) ---------- */
+.field,
+.field__input {
+  min-width: 0; /* lets date/number inputs shrink inside grids on mobile browsers */
+}
+.field__input {
+  width: 100%;
+}
+h1,
+h2,
+.portfolio-card__client,
+.page-header__sub {
+  overflow-wrap: anywhere; /* long portfolio or client names wrap instead of overflowing */
+}
+.modal {
+  overflow-y: auto; /* tall forms scroll inside the dialog on short screens */
+}
+.table-hint {
+  display: none;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding-block: var(--space-5) var(--space-10);
+  }
+  .page-header {
+    align-items: flex-start;
+    margin-bottom: var(--space-5);
+  }
+  h1 {
+    font-size: var(--text-xl);
+  }
+  .filters {
+    grid-template-columns: 1fr 1fr;
+    padding: var(--space-3);
+  }
+  .filters__clear {
+    grid-column: 1 / -1;
+  }
+  .table th,
+  .table td {
+    padding: var(--space-2) var(--space-3);
+  }
+  .table-hint {
+    display: block;
+  }
+  .modal__panel {
+    padding: var(--space-5) var(--space-4);
+  }
+  .modal__actions .btn {
+    flex: 1 1 auto;
+  }
+  .section {
+    margin-bottom: var(--space-8);
+  }
+}
+
+/* Touch screens: at least 44px tap targets. */
+@media (pointer: coarse) {
+  .btn,
+  .btn--small,
+  .field__input,
+  .segmented__option span {
+    min-height: 44px;
+  }
+  .segmented__option span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal__close {
+    width: 44px;
+    height: 44px;
   }
 }

@@ -126,46 +126,49 @@ export function TransactionTable({
           Try another instrument, such as SCOM or KCB, or widen the date range.
         </EmptyState>
       ) : (
-        <div className="table-wrap" tabIndex={0} aria-labelledby="transactions-caption">
-          <table className="table">
-            <caption id="transactions-caption" className="visually-hidden">
-              Transactions, amounts in {currency}. Column headers are buttons that sort the table.
-            </caption>
-            <thead>
-              <tr>
-                {header("tradeDate", "Trade date")}
-                {header("instrument", "Instrument")}
-                {header("type", "Type")}
-                {header("quantity", "Quantity", true)}
-                {header("unitPrice", `Unit price (${currency})`, true)}
-                {header("total", `Total (${currency})`, true)}
-                <th scope="col"><span className="visually-hidden">Actions</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((t) => (
-                <tr key={t.id}>
-                  <td className="nowrap">{formatDate(t.tradeDate)}</td>
-                  <th scope="row" className="table__instrument">{t.instrument}</th>
-                  <td>
-                    <span className={`type-tag type-tag--${t.type.toLowerCase()}`}>{t.type}</span>
-                  </td>
-                  <td className="num">{formatNumber(t.quantity)}</td>
-                  <td className="num">{formatNumber(t.unitPrice)}</td>
-                  <td className="num">{formatAmount(t.total)}</td>
-                  <td className="table__actions">
-                    <button type="button" className="btn btn--danger-outline btn--small" onClick={() => setDeleting(t)}>
-                      Delete
-                      <span className="visually-hidden">
-                        {` ${t.type} ${formatNumber(t.quantity)} ${t.instrument} on ${formatDate(t.tradeDate)}`}
-                      </span>
-                    </button>
-                  </td>
+        <>
+          <div className="table-wrap" tabIndex={0} aria-labelledby="transactions-caption">
+            <table className="table">
+              <caption id="transactions-caption" className="visually-hidden">
+                Transactions, amounts in {currency}. Column headers are buttons that sort the table.
+              </caption>
+              <thead>
+                <tr>
+                  {header("tradeDate", "Trade date")}
+                  {header("instrument", "Instrument")}
+                  {header("type", "Type")}
+                  {header("quantity", "Quantity", true)}
+                  {header("unitPrice", `Unit price (${currency})`, true)}
+                  {header("total", `Total (${currency})`, true)}
+                  <th scope="col"><span className="visually-hidden">Actions</span></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {rows.map((t) => (
+                  <tr key={t.id}>
+                    <td className="nowrap">{formatDate(t.tradeDate)}</td>
+                    <th scope="row" className="table__instrument">{t.instrument}</th>
+                    <td>
+                      <span className={`type-tag type-tag--${t.type.toLowerCase()}`}>{t.type}</span>
+                    </td>
+                    <td className="num">{formatNumber(t.quantity)}</td>
+                    <td className="num">{formatNumber(t.unitPrice)}</td>
+                    <td className="num">{formatAmount(t.total)}</td>
+                    <td className="table__actions">
+                      <button type="button" className="btn btn--danger-outline btn--small" onClick={() => setDeleting(t)}>
+                        Delete
+                        <span className="visually-hidden">
+                          {` ${t.type} ${formatNumber(t.quantity)} ${t.instrument} on ${formatDate(t.tradeDate)}`}
+                        </span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="table-hint">Swipe sideways to see all columns.</p>
+        </>
       )}
 
       <ConfirmDialog
