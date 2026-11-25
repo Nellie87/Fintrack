@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import { db } from "./db";
 import { ApiError, notFound, parseId } from "./errors";
+import { toCsv } from "./csv";
 import { computePositions } from "./holdings";
 import type { TransactionInput } from "./schemas";
 
@@ -33,12 +34,35 @@ export function serializeTransaction(t: TransactionRow) {
 }
 
 /** A portfolio's transactions, newest trade first. */
-export async function listTransactions(portfolioId: number) {
+const newestFirst = [{ tradeDate: "desc" as const }, { createdAt: "desc" as const }, { id: "desc" as const }];
+
+/**
+ * A portfolio's transactions, newest trade first.
+ * With `page`, returns one page plus the total count (sent as X-Total-Count); without it, returns all.
+ */
+export async function listTransactions(portfolioId: number, page?: { page: number; pageSize: number }) {
+  const where = { portfolioId };
+  const [rows, total] = await Promise.all([
+    db.transaction.findMany({
+      where,
+      orderBy: newestFirst,
+      ...(page && { skip: (page.page - 1) * page.pageSize, take: page.pageSize }),
+    }),
+    db.transaction.count({ where }),
+  ]);
+  return { items: rows.map(serializeTransaction), total };
+}
+
+/** All of a portfolio's transactions as CSV, oldest first (the order a ledger is read in). */
+export async function transactionsCsv(portfolioId: number, currency: string): Promise<string> {
   const rows = await db.transaction.findMany({
     where: { portfolioId },
-    orderBy: [{ tradeDate: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+    orderBy: [{ tradeDate: "asc" }, { createdAt: "asc" }, { id: "asc" }],
   });
-  return rows.map(serializeTransaction);
+  return toCsv(
+    ["trade_date", "instrument", "type", "quantity", "unit_price", "total", "currency"],
+    rows.map(serializeTransaction).map((t) => [t.tradeDate, t.instrument, t.type, t.quantity, t.unitPrice, t.total, currency]),
+  );
 }
 
 /**

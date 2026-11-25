@@ -21,6 +21,8 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
   "Access-Control-Max-Age": "600",
+  // Lets the browser app read the pagination total and the CSV file name.
+  "Access-Control-Expose-Headers": "X-Total-Count, X-Page, X-Page-Size, Content-Disposition",
 };
 
 export function proxy(request: NextRequest) {

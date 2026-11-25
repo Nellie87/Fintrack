@@ -69,6 +69,19 @@ export const transactionSchema = z.object({
     .refine((d) => d <= latestTradeDate(), { error: "Trade date cannot be in the future." }),
 });
 
+/** Optional ?page=&pageSize= query parameters; both must be given to paginate. */
+export const paginationSchema = z
+  .object({
+    page: z.coerce.number({ error: "page must be a number." }).int().min(1, { error: "page must be 1 or more." }).optional(),
+    pageSize: z.coerce
+      .number({ error: "pageSize must be a number." })
+      .int()
+      .min(1, { error: "pageSize must be between 1 and 100." })
+      .max(100, { error: "pageSize must be between 1 and 100." })
+      .optional(),
+  })
+  .transform(({ page, pageSize }) => (page || pageSize ? { page: page ?? 1, pageSize: pageSize ?? 20 } : undefined));
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type TransactionInput = z.infer<typeof transactionSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
