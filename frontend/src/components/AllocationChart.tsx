@@ -57,9 +57,12 @@ export function AllocationChart({ holdings, currency }: { holdings: Holding[]; c
                 contentStyle={{
                   borderRadius: 8,
                   border: "1px solid var(--color-border)",
+                  background: "var(--color-surface)",
+                  color: "var(--color-text)",
                   fontFamily: "var(--font-sans)",
                   fontSize: 13,
                 }}
+                itemStyle={{ color: "var(--color-text)" }}
               />
             </PieChart>
           </ResponsiveContainer>

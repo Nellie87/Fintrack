@@ -7,6 +7,17 @@
     <meta name="theme-color" content="#0b2545" />
     <meta name="description" content="FinTrack by Finnet Technologies: portfolio and transactions tracker for investment analysts." />
     <title>FinTrack by Finnet Technologies</title>
+    <script>
+      // Apply the saved or system theme before first paint, so dark mode never flashes white.
+      (function () {
+        var theme = null;
+        try { theme = localStorage.getItem("fintrack.theme"); } catch (e) {}
+        if (theme !== "light" && theme !== "dark") {
+          theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

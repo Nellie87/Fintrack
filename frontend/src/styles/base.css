@@ -84,7 +84,7 @@ select {
   z-index: 100;
   padding: var(--space-2) var(--space-4);
   background: var(--color-surface);
-  color: var(--color-navy);
+  color: var(--color-text);
   font-weight: var(--weight-semibold);
   border-radius: var(--radius-md);
 }

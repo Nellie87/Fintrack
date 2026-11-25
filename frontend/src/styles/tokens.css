@@ -30,6 +30,13 @@
   --color-border-on-dark: rgb(255 255 255 / 0.35);
   --color-backdrop: rgb(7 26 51 / 0.55); /* navy-900 scrim behind dialogs */
 
+  /* Roles (what a colour is for), so dark mode only has to swap values */
+  --color-header-bg: var(--color-navy);
+  --color-tag-buy: var(--color-navy);
+  --color-on-accent: #ffffff; /* text on teal buttons */
+  --color-on-danger: #ffffff; /* text on red buttons */
+  color-scheme: light; /* native date pickers, scrollbars */
+
   /* Meaning: gain/loss colours only ever appear next to a + or − sign */
   --color-gain: #12784f;
   --color-gain-soft: #e6f4ed;
@@ -84,4 +91,50 @@
   /* Layout */
   --container-max: 1120px;
   --header-height: 64px;
+}
+
+/*
+ * Dark mode: the same token names with dark values. Components never change.
+ * Follows the operating-system setting unless the analyst picks a theme
+ * (stored as <html data-theme="light|dark">).
+ * Contrast on the dark surface: text 13.5 · muted 7.3 · accent 7.6 · gain 8.1 · loss 7.2.
+ */
+:root[data-theme="dark"] {
+  --color-navy: #0f2a4a;
+  --color-navy-700: #1b3a63;
+  --color-accent: #3ec6b7;
+  --color-accent-hover: #5fd4c6;
+  --color-accent-soft: #123a3c;
+
+  --color-bg: #0b1524;
+  --color-surface: #13223a;
+  --color-border: #22364f;
+  --color-border-strong: #355072;
+  --color-text: #e7edf5;
+  --color-text-muted: #9fb1c7;
+
+  --color-gain: #4cd08f;
+  --color-gain-soft: #12302a;
+  --color-loss: #ff8f85;
+  --color-loss-soft: #3a1a1c;
+  --color-danger: #ff8f85;
+  --color-danger-hover: #ffb0a8;
+  --color-danger-border: rgb(255 143 133 / 0.4);
+
+  --color-header-bg: #0f2a4a;
+  --color-tag-buy: #24497a;
+  --color-on-accent: #05121f;
+  --color-on-danger: #1a0605;
+
+  --chart-1: #3ec6b7;
+  --chart-2: #7fa3cc;
+  --chart-3: #b7c8dc;
+  --chart-4: #2b8f86;
+  --chart-5: #5579a3;
+  --chart-6: #e0e7ef;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.35);
+  --shadow-md: 0 8px 24px rgb(0 0 0 / 0.45);
+  --focus-ring: 0 0 0 3px rgb(62 198 183 / 0.5);
+  color-scheme: dark;
 }

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { BrandMark } from "./BrandMark";
+import { ThemeToggle } from "./ThemeToggle";
 
 type AppHeaderProps = {
   /** Right-hand side, e.g. the signed-in analyst and a log-out button. */
@@ -19,7 +20,10 @@ export function AppHeader({ actions }: AppHeaderProps) {
             <span className="brand__by">by Finnet Technologies</span>
           </span>
         </Link>
-        {actions && <div className="app-header__actions">{actions}</div>}
+        <div className="app-header__actions">
+          <ThemeToggle />
+          {actions}
+        </div>
       </div>
     </header>
   );
