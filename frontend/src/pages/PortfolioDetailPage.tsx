@@ -1,7 +1,8 @@
 import { Link, useParams } from "react-router";
 import { ApiError } from "../api/client";
-import { usePortfolio, useSummary } from "../api/queries";
+import { usePortfolio, useSummary, useTransactions } from "../api/queries";
 import { HoldingsTable } from "../components/HoldingsTable";
+import { TransactionTable } from "../components/TransactionTable";
 import { EmptyState, ErrorState, LoadingState, QueryView } from "../components/StateViews";
 import { SummaryTiles } from "../components/SummaryTiles";
 import { formatDate } from "../lib/format";
@@ -11,6 +12,7 @@ export function PortfolioDetailPage() {
   const id = Number(useParams().id);
   const portfolio = usePortfolio(id);
   const summary = useSummary(id);
+  const transactions = useTransactions(id);
   usePageTitle(portfolio.data?.name ?? "Portfolio");
 
   if (portfolio.isPending) return <LoadingState label="Loading portfolio…" />;
@@ -75,6 +77,25 @@ export function PortfolioDetailPage() {
               </p>
             </>
           )}
+        </QueryView>
+      </section>
+
+      <section className="section" aria-labelledby="transactions-heading">
+        <h2 id="transactions-heading" className="section__title">
+          Transactions
+        </h2>
+        <QueryView
+          query={transactions}
+          loadingLabel="Loading transactions…"
+          isEmpty={(list) => list.length === 0}
+          empty={
+            <EmptyState title="No transactions yet">
+              Record this client's first trade, for example a BUY of 1,000 SCOM at {p.baseCurrency} 17.50, and the
+              holdings above will update.
+            </EmptyState>
+          }
+        >
+          {(list) => <TransactionTable portfolioId={p.id} transactions={list} currency={p.baseCurrency} />}
         </QueryView>
       </section>
     </>
