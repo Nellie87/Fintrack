@@ -3,7 +3,6 @@ import { AppLayout } from "./components/AppLayout";
 import { GuestRoute, ProtectedRoute } from "./auth/ProtectedRoute";
 import { LoginPage } from "./pages/LoginPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
-import { PortfolioDetailPage } from "./pages/PortfolioDetailPage";
 import { PortfoliosPage } from "./pages/PortfoliosPage";
 import { RegisterPage } from "./pages/RegisterPage";
 
@@ -26,7 +25,11 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute />,
         children: [
           { path: "portfolios", element: <PortfoliosPage /> },
-          { path: "portfolios/:id", element: <PortfolioDetailPage /> },
+          {
+            // Loaded on demand: it pulls in the charting library, which the login and list pages don't need.
+            path: "portfolios/:id",
+            lazy: async () => ({ Component: (await import("./pages/PortfolioDetailPage")).PortfolioDetailPage }),
+          },
         ],
       },
       { path: "*", element: <NotFoundPage /> },

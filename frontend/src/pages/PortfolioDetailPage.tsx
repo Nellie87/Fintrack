@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { ApiError } from "../api/client";
 import { useCreateTransaction, usePortfolio, useSummary, useTransactions } from "../api/queries";
+import { AllocationChart } from "../components/AllocationChart";
 import { HoldingsTable } from "../components/HoldingsTable";
 import { Modal } from "../components/Modal";
 import { TransactionForm } from "../components/TransactionForm";
@@ -68,13 +69,16 @@ export function PortfolioDetailPage() {
           {(s) => (
             <>
               <SummaryTiles totals={s.totals} currency={s.currency} holdingsCount={s.holdings.length} />
-              <h3 className="section__subtitle">Holdings</h3>
               {s.holdings.length === 0 ? (
                 <EmptyState title="No open positions">
                   Record a BUY transaction to start building this portfolio's holdings.
                 </EmptyState>
               ) : (
-                <HoldingsTable holdings={s.holdings} currency={s.currency} />
+                <>
+                  <AllocationChart holdings={s.holdings} currency={s.currency} />
+                  <h3 className="section__subtitle">Holdings</h3>
+                  <HoldingsTable holdings={s.holdings} currency={s.currency} />
+                </>
               )}
               <p className="footnote">
                 Market value uses each instrument's most recent trade price (no live price feed). Average cost is
