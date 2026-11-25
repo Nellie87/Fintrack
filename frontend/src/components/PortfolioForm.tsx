@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { PortfolioInput } from "../api/types";
 import { applyServerErrors } from "../lib/applyServerErrors";
+import { RequiredMark, RequiredNote } from "./RequiredMark";
 import { TextField } from "./TextField";
 
 const schema = z.object({
@@ -43,16 +44,20 @@ export function PortfolioForm({ initial, submitLabel, onSubmit, onCancel }: Port
 
   return (
     <form className="form" onSubmit={submit} noValidate>
+      <RequiredNote />
       {formError && (
         <div className="alert alert--error" role="alert">
           {formError}
         </div>
       )}
-      <TextField label="Portfolio name" placeholder="e.g. Growth Equity" error={errors.name?.message} {...register("name")} />
-      <TextField label="Client name" placeholder="e.g. Acacia Family Trust" error={errors.clientName?.message} {...register("clientName")} />
+      <TextField required label="Portfolio name" placeholder="e.g. Growth Equity" error={errors.name?.message} {...register("name")} />
+      <TextField required label="Client name" placeholder="e.g. Acacia Family Trust" error={errors.clientName?.message} {...register("clientName")} />
 
       <fieldset className="field fieldset">
-        <legend className="field__label">Base currency</legend>
+        <legend className="field__label">
+          Base currency
+          <RequiredMark />
+        </legend>
         <div className="segmented">
           {(["KES", "USD"] as const).map((c) => (
             <label key={c} className="segmented__option">
