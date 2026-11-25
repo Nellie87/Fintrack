@@ -111,6 +111,22 @@ paths:
               schema: { $ref: "#/components/schemas/User" }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
+  /api/dashboard:
+    get:
+      tags: [Summary]
+      summary: Analyst dashboard KPIs
+      description: |
+        Totals across all of the analyst's portfolios, **per currency** (KES and USD are never
+        added together), best and worst positions by % gain, the three largest positions per
+        currency, and the six most recent trades.
+      responses:
+        "200":
+          description: Dashboard data.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Dashboard" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
   /api/portfolios:
     get:
       tags: [Portfolios]
@@ -500,6 +516,54 @@ components:
         totalValue: { type: number, example: 22800 }
         gain: { type: number, example: 2160 }
         gainPct: { type: number, example: 10.47 }
+
+    PositionRef:
+      type: object
+      properties:
+        portfolioId: { type: integer, example: 7 }
+        portfolioName: { type: string, example: Growth Equity }
+        currency: { $ref: "#/components/schemas/Currency" }
+        instrument: { type: string, example: SCOM }
+        totalValue: { type: number, example: 208450 }
+        gain: { type: number, example: 25116.67 }
+        gainPct: { type: number, example: 13.7 }
+
+    Dashboard:
+      type: object
+      properties:
+        portfolioCount: { type: integer, example: 3 }
+        clientCount: { type: integer, example: 3 }
+        transactionCount: { type: integer, example: 22 }
+        byCurrency:
+          type: array
+          items:
+            type: object
+            properties:
+              currency: { $ref: "#/components/schemas/Currency" }
+              portfolioCount: { type: integer, example: 2 }
+              totalInvested: { type: number, example: 8992333.33 }
+              totalValue: { type: number, example: 9028350 }
+              gain: { type: number, example: 36016.67 }
+              gainPct: { type: number, example: 0.4 }
+        bestPerformer: { allOf: [{ $ref: "#/components/schemas/PositionRef" }], nullable: true }
+        worstPerformer: { allOf: [{ $ref: "#/components/schemas/PositionRef" }], nullable: true }
+        topPositions:
+          type: array
+          items: { $ref: "#/components/schemas/PositionRef" }
+        recentTransactions:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+              portfolioId: { type: integer }
+              portfolioName: { type: string }
+              currency: { $ref: "#/components/schemas/Currency" }
+              instrument: { type: string }
+              type: { type: string, enum: [BUY, SELL] }
+              quantity: { type: number }
+              unitPrice: { type: number }
+              tradeDate: { type: string, format: date }
 
     Summary:
       type: object
