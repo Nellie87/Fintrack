@@ -7,8 +7,8 @@ export function NotFoundPage() {
     <section className="page-message">
       <h1>Page not found</h1>
       <p>The page you're looking for doesn't exist or has moved.</p>
-      <Link className="btn btn--primary" to="/portfolios">
-        Go to portfolios
+      <Link className="btn btn--primary" to="/dashboard">
+        Go to dashboard
       </Link>
     </section>
   );

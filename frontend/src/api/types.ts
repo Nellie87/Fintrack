@@ -44,3 +44,34 @@ export type Totals = { totalInvested: number; totalValue: number; gain: number; 
 export type Summary = { portfolioId: number; currency: Currency; holdings: Holding[]; totals: Totals };
 
 export type ErrorDetail = { field: string; message: string };
+
+export type PositionRef = {
+  portfolioId: number;
+  portfolioName: string;
+  currency: Currency;
+  instrument: string;
+  totalValue: number;
+  gain: number;
+  gainPct: number;
+};
+
+export type Dashboard = {
+  portfolioCount: number;
+  clientCount: number;
+  transactionCount: number;
+  byCurrency: (Totals & { currency: Currency; portfolioCount: number })[];
+  bestPerformer: PositionRef | null;
+  worstPerformer: PositionRef | null;
+  topPositions: PositionRef[];
+  recentTransactions: {
+    id: number;
+    portfolioId: number;
+    portfolioName: string;
+    currency: Currency;
+    instrument: string;
+    type: TransactionType;
+    quantity: number;
+    unitPrice: number;
+    tradeDate: string;
+  }[];
+};

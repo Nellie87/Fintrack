@@ -28,7 +28,7 @@ export function GuestRoute() {
   const location = useLocation();
   if (status === "authenticated") {
     const from = (location.state as { from?: string } | null)?.from;
-    return <Navigate to={from && from !== "/login" ? from : "/portfolios"} replace />;
+    return <Navigate to={from && from !== "/login" ? from : "/dashboard"} replace />;
   }
   return <Outlet />;
 }
