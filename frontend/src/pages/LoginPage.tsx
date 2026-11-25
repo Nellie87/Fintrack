@@ -8,6 +8,7 @@ import { RequiredNote } from "../components/RequiredMark";
 import { TextField } from "../components/TextField";
 import { applyServerErrors } from "../lib/applyServerErrors";
 import { usePageTitle } from "../lib/usePageTitle";
+import { useToast } from "../lib/toast-context";
 
 const DEMO = { email: "demo@fintrack.app", password: "Demo@2026" };
 
@@ -20,6 +21,7 @@ type LoginValues = z.infer<typeof schema>;
 export function LoginPage() {
   usePageTitle("Log in");
   const { login } = useAuth();
+  const toast = useToast();
   const [formError, setFormError] = useState<string | null>(null);
 
   const {
@@ -33,8 +35,9 @@ export function LoginPage() {
   const onSubmit = handleSubmit(async ({ email, password }) => {
     setFormError(null);
     try {
-      // On success GuestRoute redirects to the page the analyst first asked for (or /portfolios).
+      // On success GuestRoute redirects to the page the analyst first asked for (or the dashboard).
       await login(email, password);
+      toast.success("Welcome back to FinTrack.");
     } catch (err) {
       setFormError(applyServerErrors(err, setError, ["email", "password"]));
     }

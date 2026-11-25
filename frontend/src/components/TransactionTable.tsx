@@ -3,6 +3,7 @@ import { ApiError } from "../api/client";
 import type { Currency, Transaction } from "../api/types";
 import { useDeleteTransaction } from "../api/queries";
 import { formatAmount, formatDate, formatNumber } from "../lib/format";
+import { useToast } from "../lib/toast-context";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { EmptyState } from "./StateViews";
 
@@ -31,6 +32,7 @@ export function TransactionTable({
   const [page, setPage] = useState(1);
   const [deleting, setDeleting] = useState<Transaction | null>(null);
   const deleteTransaction = useDeleteTransaction(portfolioId);
+  const toast = useToast();
   const ids = { instrument: useId(), type: useId(), from: useId(), to: useId() };
 
   const instruments = useMemo(
@@ -230,7 +232,15 @@ export function TransactionTable({
               : null
         }
         onCancel={closeDelete}
-        onConfirm={() => deleting && deleteTransaction.mutate(deleting.id, { onSuccess: closeDelete })}
+        onConfirm={() =>
+          deleting &&
+          deleteTransaction.mutate(deleting.id, {
+            onSuccess: () => {
+              toast.success(`Deleted the ${deleting.type} of ${formatNumber(deleting.quantity)} ${deleting.instrument}. Holdings updated.`);
+              closeDelete();
+            },
+          })
+        }
       >
         {deleting && (
           <p>

@@ -10,7 +10,8 @@ import { TransactionForm } from "../components/TransactionForm";
 import { TransactionTable } from "../components/TransactionTable";
 import { EmptyState, ErrorState, LoadingState, QueryView } from "../components/StateViews";
 import { SummaryTiles } from "../components/SummaryTiles";
-import { formatDate } from "../lib/format";
+import { formatDate, formatNumber } from "../lib/format";
+import { useToast } from "../lib/toast-context";
 import { usePageTitle } from "../lib/usePageTitle";
 
 export function PortfolioDetailPage() {
@@ -20,6 +21,7 @@ export function PortfolioDetailPage() {
   const transactions = useTransactions(id);
   const createTransaction = useCreateTransaction(id);
   const [adding, setAdding] = useState(false);
+  const toast = useToast();
   usePageTitle(portfolio.data?.name ?? "Portfolio");
 
   if (portfolio.isPending) return <LoadingState label="Loading portfolio…" />;
@@ -133,6 +135,7 @@ export function PortfolioDetailPage() {
             onCancel={() => setAdding(false)}
             onSubmit={async (input) => {
               await createTransaction.mutateAsync(input);
+              toast.success(`Recorded ${input.type} of ${formatNumber(input.quantity)} ${input.instrument.trim().toUpperCase()}.`);
               setAdding(false);
             }}
           />
