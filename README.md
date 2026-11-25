@@ -8,7 +8,7 @@ A portfolio and transactions tracker for investment analysts. An analyst registe
 | **API docs (Swagger)** | https://fintrack-apis.vercel.app/api/docs |
 | **Demo login** | `demo@fintrack.app` / `Demo@2026` (or click **Fill in demo login**) |
 
-The demo analyst has three seeded portfolios (two in KES, one in USD) with 22 trades. All client names and data are fictional.
+The seed script gives the demo analyst three portfolios (two in KES, one in USD) with 22 trades; the live demo may also contain portfolios added while testing. All client names and data are fictional.
 
 ![Portfolio detail](docs/screenshots/detail-desktop.png)
 
@@ -364,6 +364,10 @@ I used Claude Code, an AI coding assistant, as a pair programmer.
 **Portfolio detail:** summary tiles and allocation donut
 
 ![Portfolio detail](docs/screenshots/detail-desktop.png)
+
+**Portfolio detail in USD:** every amount follows the portfolio's own base currency
+
+![USD portfolio detail](docs/screenshots/detail-usd.png)
 
 **Portfolio detail:** holdings and the sortable, filterable transactions table with CSV export
 
