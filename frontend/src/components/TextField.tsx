@@ -1,4 +1,5 @@
 import { forwardRef, useId, type InputHTMLAttributes } from "react";
+import { RequiredMark } from "./RequiredMark";
 
 type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
@@ -24,6 +25,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
     <div className={["field", className].filter(Boolean).join(" ")}>
       <label className="field__label" htmlFor={inputId}>
         {label}
+        {inputProps.required && <RequiredMark />}
       </label>
       <input
         ref={ref}

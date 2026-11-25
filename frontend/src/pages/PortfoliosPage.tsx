@@ -89,7 +89,7 @@ export function PortfoliosPage() {
                   >
                     Edit<span className="visually-hidden"> {p.name}</span>
                   </button>
-                  <button type="button" className="btn btn--secondary btn--small" onClick={() => setDeleting(p)}>
+                  <button type="button" className="btn btn--danger-outline btn--small" onClick={() => setDeleting(p)}>
                     Delete<span className="visually-hidden"> {p.name}</span>
                   </button>
                 </div>

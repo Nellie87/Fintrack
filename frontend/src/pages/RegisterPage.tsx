@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link } from "react-router";
 import { useAuth } from "../auth/auth-context";
+import { RequiredNote } from "../components/RequiredMark";
 import { TextField } from "../components/TextField";
 import { applyServerErrors } from "../lib/applyServerErrors";
 import { usePageTitle } from "../lib/usePageTitle";
@@ -61,13 +62,15 @@ export function RegisterPage() {
       <p className="auth-card__lead">Analysts only see the portfolios they create.</p>
 
       <form className="form" onSubmit={onSubmit} noValidate>
+        <RequiredNote />
         {formError && (
           <div className="alert alert--error" role="alert">
             {formError}
           </div>
         )}
-        <TextField label="Full name" autoComplete="name" error={errors.name?.message} {...register("name")} />
+        <TextField required label="Full name" autoComplete="name" error={errors.name?.message} {...register("name")} />
         <TextField
+          required
           label="Email"
           type="email"
           autoComplete="email"
@@ -75,6 +78,7 @@ export function RegisterPage() {
           {...register("email")}
         />
         <TextField
+          required
           label="Password"
           type="password"
           autoComplete="new-password"
@@ -83,6 +87,7 @@ export function RegisterPage() {
           {...register("password")}
         />
         <TextField
+          required
           label="Confirm password"
           type="password"
           autoComplete="new-password"

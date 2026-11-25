@@ -154,7 +154,7 @@ export function TransactionTable({
                   <td className="num">{formatNumber(t.unitPrice)}</td>
                   <td className="num">{formatAmount(t.total)}</td>
                   <td className="table__actions">
-                    <button type="button" className="btn btn--secondary btn--small" onClick={() => setDeleting(t)}>
+                    <button type="button" className="btn btn--danger-outline btn--small" onClick={() => setDeleting(t)}>
                       Delete
                       <span className="visually-hidden">
                         {` ${t.type} ${formatNumber(t.quantity)} ${t.instrument} on ${formatDate(t.tradeDate)}`}

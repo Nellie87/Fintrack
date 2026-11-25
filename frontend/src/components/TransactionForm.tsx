@@ -6,6 +6,7 @@ import { ApiError } from "../api/client";
 import type { Currency, Holding, TransactionInput } from "../api/types";
 import { applyServerErrors } from "../lib/applyServerErrors";
 import { formatNumber } from "../lib/format";
+import { RequiredMark, RequiredNote } from "./RequiredMark";
 import { TextField } from "./TextField";
 
 /** Common Nairobi Securities Exchange tickers and Treasury bills, offered as suggestions. */
@@ -73,6 +74,7 @@ export function TransactionForm({ currency, holdings, knownInstruments, onSubmit
 
   return (
     <form className="form" onSubmit={submit} noValidate>
+      <RequiredNote />
       {formError && (
         <div className="alert alert--error" role="alert">
           {formError}
@@ -80,7 +82,10 @@ export function TransactionForm({ currency, holdings, knownInstruments, onSubmit
       )}
 
       <fieldset className="field fieldset">
-        <legend className="field__label">Type</legend>
+        <legend className="field__label">
+          Type
+          <RequiredMark />
+        </legend>
         <div className="segmented">
           {(["BUY", "SELL"] as const).map((t) => (
             <label key={t} className="segmented__option">
@@ -92,6 +97,7 @@ export function TransactionForm({ currency, holdings, knownInstruments, onSubmit
       </fieldset>
 
       <TextField
+        required
         label="Instrument"
         list={listId}
         autoComplete="off"
@@ -112,6 +118,7 @@ export function TransactionForm({ currency, holdings, knownInstruments, onSubmit
 
       <div className="form-row">
         <TextField
+          required
           label="Quantity"
           type="number"
           inputMode="decimal"
@@ -122,6 +129,7 @@ export function TransactionForm({ currency, holdings, knownInstruments, onSubmit
           {...register("quantity", { valueAsNumber: true })}
         />
         <TextField
+          required
           label={`Unit price (${currency})`}
           type="number"
           inputMode="decimal"
@@ -134,6 +142,7 @@ export function TransactionForm({ currency, holdings, knownInstruments, onSubmit
       </div>
 
       <TextField
+        required
         label="Trade date"
         type="date"
         max={today()}

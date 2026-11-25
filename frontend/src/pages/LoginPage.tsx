@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link } from "react-router";
 import { useAuth } from "../auth/auth-context";
+import { RequiredNote } from "../components/RequiredMark";
 import { TextField } from "../components/TextField";
 import { applyServerErrors } from "../lib/applyServerErrors";
 import { usePageTitle } from "../lib/usePageTitle";
@@ -51,12 +52,14 @@ export function LoginPage() {
       <p className="auth-card__lead">Track client portfolios, trades and holdings.</p>
 
       <form className="form" onSubmit={onSubmit} noValidate>
+        <RequiredNote />
         {formError && (
           <div className="alert alert--error" role="alert">
             {formError}
           </div>
         )}
         <TextField
+          required
           label="Email"
           type="email"
           autoComplete="email"
@@ -64,6 +67,7 @@ export function LoginPage() {
           {...register("email")}
         />
         <TextField
+          required
           label="Password"
           type="password"
           autoComplete="current-password"
