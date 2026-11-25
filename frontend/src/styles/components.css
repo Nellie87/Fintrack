@@ -459,3 +459,108 @@
 .segmented__option input:focus-visible + span {
   box-shadow: inset var(--focus-ring);
 }
+
+/* ---------- Portfolio detail ---------- */
+.breadcrumb {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-10);
+}
+.section__title {
+  font-size: var(--text-xl);
+}
+.section__subtitle {
+  margin-top: var(--space-2);
+}
+.footnote {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* Summary tiles */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-5);
+}
+.tile dt {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+.tile dd {
+  margin: 0;
+}
+.tile__value {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  text-align: left;
+}
+.tile__note {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+.tile__note.gain {
+  color: var(--color-gain);
+}
+.tile__note.loss {
+  color: var(--color-loss);
+}
+
+/* ---------- Data tables ---------- */
+.table-wrap {
+  overflow-x: auto; /* the table scrolls sideways on phones; the page never does */
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+.table th,
+.table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+.table thead th {
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.table th.num,
+.table td.num {
+  text-align: right;
+}
+.table tbody tr:last-child > * {
+  border-bottom: none;
+}
+.table tbody tr:hover {
+  background: var(--color-bg);
+}
+.table__instrument {
+  font-weight: var(--weight-semibold);
+}
+.table__sub {
+  display: block;
+  font-size: var(--text-xs);
+}

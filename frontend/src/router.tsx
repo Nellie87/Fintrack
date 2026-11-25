@@ -3,6 +3,7 @@ import { AppLayout } from "./components/AppLayout";
 import { GuestRoute, ProtectedRoute } from "./auth/ProtectedRoute";
 import { LoginPage } from "./pages/LoginPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { PortfolioDetailPage } from "./pages/PortfolioDetailPage";
 import { PortfoliosPage } from "./pages/PortfoliosPage";
 import { RegisterPage } from "./pages/RegisterPage";
 
@@ -25,7 +26,7 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute />,
         children: [
           { path: "portfolios", element: <PortfoliosPage /> },
-          { path: "portfolios/:id", element: <h1>Portfolio</h1> },
+          { path: "portfolios/:id", element: <PortfolioDetailPage /> },
         ],
       },
       { path: "*", element: <NotFoundPage /> },

@@ -13,6 +13,11 @@ export function formatMoney(amount: number, currency: Currency): string {
   return `${currency} ${twoDp.format(amount)}`;
 }
 
+/** Money inside a table whose header already names the currency: "1,250,000.00". */
+export function formatAmount(amount: number): string {
+  return twoDp.format(amount);
+}
+
 /** Quantities and unit prices: up to 4 decimals, no trailing zeros. "1,500" or "17.2". */
 export function formatNumber(value: number): string {
   return upToFourDp.format(value);

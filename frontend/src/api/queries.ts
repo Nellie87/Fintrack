@@ -1,13 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
-import type { Portfolio, PortfolioInput, PortfolioListItem } from "./types";
+import type { Portfolio, PortfolioInput, PortfolioListItem, Summary } from "./types";
 
 /** TanStack Query hooks: one per API call, with cache keys kept in one place. */
 
 export const queryKeys = {
   portfolios: ["portfolios"] as const,
   portfolio: (id: number) => ["portfolios", id] as const,
+  summary: (id: number) => ["portfolios", id, "summary"] as const,
 };
+
+export function useSummary(id: number) {
+  return useQuery({
+    queryKey: queryKeys.summary(id),
+    queryFn: () => api<Summary>(`/api/portfolios/${id}/summary`),
+  });
+}
 
 export function usePortfolios() {
   return useQuery({
