@@ -1,7 +1,9 @@
 import { createBrowserRouter, Navigate } from "react-router";
 import { AppLayout } from "./components/AppLayout";
 import { GuestRoute, ProtectedRoute } from "./auth/ProtectedRoute";
+import { LoginPage } from "./pages/LoginPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { RegisterPage } from "./pages/RegisterPage";
 
 // The <h1> placeholders are replaced as each page lands in its own commit.
 export const router = createBrowserRouter([
@@ -13,8 +15,8 @@ export const router = createBrowserRouter([
         // Only for visitors who are not logged in.
         element: <GuestRoute />,
         children: [
-          { path: "login", element: <h1>Log in</h1> },
-          { path: "register", element: <h1>Create account</h1> },
+          { path: "login", element: <LoginPage /> },
+          { path: "register", element: <RegisterPage /> },
         ],
       },
       {

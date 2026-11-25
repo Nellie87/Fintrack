@@ -19,9 +19,16 @@ export function ProtectedRoute() {
   return <Outlet />;
 }
 
-/** The reverse: login/register pages send an already logged-in analyst to their portfolios. */
+/**
+ * The reverse: login/register pages send an already logged-in analyst on,
+ * back to the page they originally asked for if there was one.
+ */
 export function GuestRoute() {
   const { status } = useAuth();
-  if (status === "authenticated") return <Navigate to="/portfolios" replace />;
+  const location = useLocation();
+  if (status === "authenticated") {
+    const from = (location.state as { from?: string } | null)?.from;
+    return <Navigate to={from && from !== "/login" ? from : "/portfolios"} replace />;
+  }
   return <Outlet />;
 }
