@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { ApiError } from "../api/client";
-import { usePortfolio, useSummary, useTransactions } from "../api/queries";
+import { useCreateTransaction, usePortfolio, useSummary, useTransactions } from "../api/queries";
 import { HoldingsTable } from "../components/HoldingsTable";
+import { Modal } from "../components/Modal";
+import { TransactionForm } from "../components/TransactionForm";
 import { TransactionTable } from "../components/TransactionTable";
 import { EmptyState, ErrorState, LoadingState, QueryView } from "../components/StateViews";
 import { SummaryTiles } from "../components/SummaryTiles";
@@ -13,6 +16,8 @@ export function PortfolioDetailPage() {
   const portfolio = usePortfolio(id);
   const summary = useSummary(id);
   const transactions = useTransactions(id);
+  const createTransaction = useCreateTransaction(id);
+  const [adding, setAdding] = useState(false);
   usePageTitle(portfolio.data?.name ?? "Portfolio");
 
   if (portfolio.isPending) return <LoadingState label="Loading portfolio…" />;
@@ -81,15 +86,27 @@ export function PortfolioDetailPage() {
       </section>
 
       <section className="section" aria-labelledby="transactions-heading">
-        <h2 id="transactions-heading" className="section__title">
-          Transactions
-        </h2>
+        <div className="section__header">
+          <h2 id="transactions-heading" className="section__title">
+            Transactions
+          </h2>
+          <button type="button" className="btn btn--primary" onClick={() => setAdding(true)}>
+            Add transaction
+          </button>
+        </div>
         <QueryView
           query={transactions}
           loadingLabel="Loading transactions…"
           isEmpty={(list) => list.length === 0}
           empty={
-            <EmptyState title="No transactions yet">
+            <EmptyState
+              title="No transactions yet"
+              action={
+                <button type="button" className="btn btn--primary" onClick={() => setAdding(true)}>
+                  Record the first trade
+                </button>
+              }
+            >
               Record this client's first trade, for example a BUY of 1,000 SCOM at {p.baseCurrency} 17.50, and the
               holdings above will update.
             </EmptyState>
@@ -98,6 +115,21 @@ export function PortfolioDetailPage() {
           {(list) => <TransactionTable portfolioId={p.id} transactions={list} currency={p.baseCurrency} />}
         </QueryView>
       </section>
+
+      <Modal open={adding} title={`Add transaction · ${p.name}`} onClose={() => setAdding(false)}>
+        {adding && (
+          <TransactionForm
+            currency={p.baseCurrency}
+            holdings={summary.data?.holdings ?? []}
+            knownInstruments={[...new Set((transactions.data ?? []).map((t) => t.instrument))]}
+            onCancel={() => setAdding(false)}
+            onSubmit={async (input) => {
+              await createTransaction.mutateAsync(input);
+              setAdding(false);
+            }}
+          />
+        )}
+      </Modal>
     </>
   );
 }

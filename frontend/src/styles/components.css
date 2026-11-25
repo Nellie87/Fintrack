@@ -639,3 +639,22 @@ th.num .sort-button {
 .table__actions {
   text-align: right;
 }
+
+/* ---------- Section header with action, two-column form row ---------- */
+.section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+@media (max-width: 480px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}

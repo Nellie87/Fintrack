@@ -1,6 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./client";
-import type { Portfolio, PortfolioInput, PortfolioListItem, Summary, Transaction } from "./types";
+import type {
+  Portfolio,
+  PortfolioInput,
+  PortfolioListItem,
+  Summary,
+  Transaction,
+  TransactionInput,
+} from "./types";
 
 /** TanStack Query hooks: one per API call, with cache keys kept in one place. */
 
@@ -25,6 +32,15 @@ function invalidatePortfolioData(qc: ReturnType<typeof useQueryClient>, portfoli
     qc.invalidateQueries({ queryKey: queryKeys.summary(portfolioId) }),
     qc.invalidateQueries({ queryKey: queryKeys.portfolios, exact: true }),
   ]);
+}
+
+export function useCreateTransaction(portfolioId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: TransactionInput) =>
+      api<Transaction>(`/api/portfolios/${portfolioId}/transactions`, { method: "POST", body: input }),
+    onSuccess: () => invalidatePortfolioData(qc, portfolioId),
+  });
 }
 
 export function useDeleteTransaction(portfolioId: number) {
