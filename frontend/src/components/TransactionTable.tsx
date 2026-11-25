@@ -11,8 +11,12 @@ type Sort = { key: SortKey; dir: "asc" | "desc" };
 type Filters = { instrument: string; type: "" | "BUY" | "SELL"; from: string; to: string };
 
 const NO_FILTERS: Filters = { instrument: "", type: "", from: "", to: "" };
+const PAGE_SIZE = 10;
 
-/** Sorting and filtering run in the browser: a portfolio's trade list is small and already loaded. */
+/**
+ * Sorting, filtering and paging run in the browser: a portfolio's trade list is small and
+ * already loaded. (The API also supports ?page=&pageSize= for larger histories.)
+ */
 export function TransactionTable({
   portfolioId,
   transactions,
@@ -24,6 +28,7 @@ export function TransactionTable({
 }) {
   const [sort, setSort] = useState<Sort>({ key: "tradeDate", dir: "desc" });
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
+  const [page, setPage] = useState(1);
   const [deleting, setDeleting] = useState<Transaction | null>(null);
   const deleteTransaction = useDeleteTransaction(portfolioId);
   const ids = { instrument: useId(), type: useId(), from: useId(), to: useId() };
@@ -51,10 +56,25 @@ export function TransactionTable({
     });
   }, [transactions, filters, sort]);
 
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount); // stays valid after deletes or filtering
+  const firstRow = (currentPage - 1) * PAGE_SIZE;
+  const visible = rows.slice(firstRow, firstRow + PAGE_SIZE);
+
+  // Any change to what's shown starts again from page 1.
   const isFiltered = JSON.stringify(filters) !== JSON.stringify(NO_FILTERS);
-  const setFilter = <K extends keyof Filters>(key: K, value: Filters[K]) => setFilters((f) => ({ ...f, [key]: value }));
-  const toggleSort = (key: SortKey) =>
+  const setFilter = <K extends keyof Filters>(key: K, value: Filters[K]) => {
+    setFilters((f) => ({ ...f, [key]: value }));
+    setPage(1);
+  };
+  const clearFilters = () => {
+    setFilters(NO_FILTERS);
+    setPage(1);
+  };
+  const toggleSort = (key: SortKey) => {
     setSort((s) => (s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: key === "tradeDate" ? "desc" : "asc" }));
+    setPage(1);
+  };
 
   const closeDelete = () => {
     setDeleting(null);
@@ -104,21 +124,24 @@ export function TransactionTable({
           <input id={ids.to} type="date" className="field__input" value={filters.to} min={filters.from || undefined} onChange={(e) => setFilter("to", e.target.value)} />
         </div>
         {isFiltered && (
-          <button type="button" className="btn btn--secondary filters__clear" onClick={() => setFilters(NO_FILTERS)}>
+          <button type="button" className="btn btn--secondary filters__clear" onClick={clearFilters}>
             Clear filters
           </button>
         )}
       </div>
 
       <p className="table-count" aria-live="polite">
-        Showing {rows.length} of {transactions.length} {transactions.length === 1 ? "transaction" : "transactions"}
+        {rows.length === 0
+          ? `No matches among ${transactions.length} transactions`
+          : `Showing ${firstRow + 1}–${firstRow + visible.length} of ${rows.length}` +
+            (isFiltered ? ` matching (${transactions.length} in total)` : rows.length === 1 ? " transaction" : " transactions")}
       </p>
 
       {rows.length === 0 ? (
         <EmptyState
           title="No transactions match these filters"
           action={
-            <button type="button" className="btn btn--secondary btn--small" onClick={() => setFilters(NO_FILTERS)}>
+            <button type="button" className="btn btn--secondary btn--small" onClick={clearFilters}>
               Clear filters
             </button>
           }
@@ -144,7 +167,7 @@ export function TransactionTable({
                 </tr>
               </thead>
               <tbody>
-                {rows.map((t) => (
+                {visible.map((t) => (
                   <tr key={t.id}>
                     <td className="nowrap">{formatDate(t.tradeDate)}</td>
                     <th scope="row" className="table__instrument">{t.instrument}</th>
@@ -168,6 +191,29 @@ export function TransactionTable({
             </table>
           </div>
           <p className="table-hint">Swipe sideways to see all columns.</p>
+          {pageCount > 1 && (
+            <nav className="pager" aria-label="Transaction pages">
+              <button
+                type="button"
+                className="btn btn--secondary btn--small"
+                onClick={() => setPage(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                ← Previous
+              </button>
+              <span className="pager__status" aria-current="page">
+                Page {currentPage} of {pageCount}
+              </span>
+              <button
+                type="button"
+                className="btn btn--secondary btn--small"
+                onClick={() => setPage(currentPage + 1)}
+                disabled={currentPage === pageCount}
+              >
+                Next →
+              </button>
+            </nav>
+          )}
         </>
       )}
 

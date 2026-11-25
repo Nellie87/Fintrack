@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router";
 import { ApiError } from "../api/client";
 import { useCreateTransaction, usePortfolio, useSummary, useTransactions } from "../api/queries";
 import { AllocationChart } from "../components/AllocationChart";
+import { ExportCsvButton } from "../components/ExportCsvButton";
 import { HoldingsTable } from "../components/HoldingsTable";
 import { Modal } from "../components/Modal";
 import { TransactionForm } from "../components/TransactionForm";
@@ -94,9 +95,12 @@ export function PortfolioDetailPage() {
           <h2 id="transactions-heading" className="section__title">
             Transactions
           </h2>
-          <button type="button" className="btn btn--primary" onClick={() => setAdding(true)}>
-            Add transaction
-          </button>
+          <div className="section__actions">
+            <ExportCsvButton portfolioId={p.id} disabled={!transactions.data?.length} />
+            <button type="button" className="btn btn--primary" onClick={() => setAdding(true)}>
+              Add transaction
+            </button>
+          </div>
         </div>
         <QueryView
           query={transactions}

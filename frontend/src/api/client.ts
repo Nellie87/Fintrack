@@ -64,6 +64,34 @@ export function setUnauthorizedHandler(handler: (() => void) | null) {
 
 type RequestOptions = { method?: "GET" | "POST" | "PUT" | "DELETE"; body?: unknown };
 
+/**
+ * Downloads a file from the API (e.g. the CSV export). A plain <a href> can't send the
+ * Authorization header, so the file is fetched here and handed to the browser as a blob.
+ */
+export async function apiDownload(path: string, fallbackName: string): Promise<void> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  } catch {
+    throw new ApiError(0, "NETWORK_ERROR", "Can't reach the server. Check your connection and try again.");
+  }
+  if (!res.ok) {
+    const err = (await res.json().catch(() => null))?.error;
+    if (res.status === 401 && token) onUnauthorized?.();
+    throw new ApiError(res.status, err?.code ?? "UNKNOWN_ERROR", err?.message ?? `Download failed (${res.status}).`);
+  }
+
+  const name = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "")?.[1] ?? fallbackName;
+  const url = URL.createObjectURL(await res.blob());
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = name;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 export async function api<T>(path: string, { method = "GET", body }: RequestOptions = {}): Promise<T> {
   const headers: Record<string, string> = { Accept: "application/json" };
   if (body !== undefined) headers["Content-Type"] = "application/json";
