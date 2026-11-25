@@ -3,6 +3,7 @@ import { AppLayout } from "./components/AppLayout";
 import { GuestRoute, ProtectedRoute } from "./auth/ProtectedRoute";
 import { LoginPage } from "./pages/LoginPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { PortfoliosPage } from "./pages/PortfoliosPage";
 import { RegisterPage } from "./pages/RegisterPage";
 
 // The <h1> placeholders are replaced as each page lands in its own commit.
@@ -23,7 +24,7 @@ export const router = createBrowserRouter([
         // Only for logged-in analysts.
         element: <ProtectedRoute />,
         children: [
-          { path: "portfolios", element: <h1>Portfolios</h1> },
+          { path: "portfolios", element: <PortfoliosPage /> },
           { path: "portfolios/:id", element: <h1>Portfolio</h1> },
         ],
       },
