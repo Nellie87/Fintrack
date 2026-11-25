@@ -18,7 +18,10 @@ export const registerSchema = z.object({
   password: z
     .string({ error: "Password is required." })
     .min(8, { error: "Password must be at least 8 characters." })
-    .max(72, { error: "Password must be at most 72 characters." }), // bcrypt only uses the first 72 bytes
+    .max(72, { error: "Password must be at most 72 characters." }) // bcrypt only uses the first 72 bytes
+    .regex(/[A-Z]/, { error: "Password must include an uppercase letter." })
+    .regex(/[a-z]/, { error: "Password must include a lowercase letter." })
+    .regex(/\d/, { error: "Password must include a number." }),
 });
 
 export const loginSchema = z.object({

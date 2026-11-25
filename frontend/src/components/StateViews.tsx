@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { UseQueryResult } from "@tanstack/react-query";
-import { ApiError } from "../api/client";
+import { friendlyError } from "../lib/friendlyError";
 
 /**
  * Loading, empty and error views used by every screen that calls the API.
@@ -28,7 +28,7 @@ export function EmptyState({ title, children, action }: { title: string; childre
 }
 
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
-  const message = error instanceof ApiError ? error.message : "Something went wrong while loading this.";
+  const message = friendlyError(error);
   return (
     <div className="state state--error" role="alert">
       <p className="state__title">We couldn't load this</p>

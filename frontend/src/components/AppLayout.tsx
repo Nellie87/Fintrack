@@ -16,7 +16,7 @@ export function AppLayout() {
           user && (
             <>
               <span className="app-header__user">{user.name}</span>
-              <button type="button" className="btn btn--ghost-on-dark btn--small" onClick={logout}>
+              <button type="button" className="btn btn--danger btn--small" onClick={logout}>
                 Log out
               </button>
             </>

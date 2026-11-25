@@ -369,7 +369,7 @@ components:
       properties:
         name: { type: string, minLength: 2, maxLength: 100, example: Jane Analyst }
         email: { type: string, format: email, example: jane@example.com }
-        password: { type: string, minLength: 8, maxLength: 72, example: Passw0rd! }
+        password: { type: string, minLength: 8, maxLength: 72, pattern: '^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).+$', description: "8 to 72 characters with an uppercase letter, a lowercase letter and a number.", example: Passw0rd! }
 
     LoginInput:
       type: object

@@ -5,6 +5,8 @@ type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   error?: string;
   hint?: string;
+  /** id of extra help rendered outside the field (e.g. a live checklist), announced with the hint and error. */
+  describedById?: string;
 };
 
 /**
@@ -12,14 +14,14 @@ type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & {
  * hint/error are linked with aria-describedby so screen readers announce them.
  */
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField(
-  { label, error, hint, id, className, ...inputProps },
+  { label, error, hint, describedById, id, className, ...inputProps },
   ref,
 ) {
   const autoId = useId();
   const inputId = id ?? autoId;
   const hintId = hint ? `${inputId}-hint` : undefined;
   const errorId = error ? `${inputId}-error` : undefined;
-  const describedBy = [hintId, errorId].filter(Boolean).join(" ") || undefined;
+  const describedBy = [hintId, describedById, errorId].filter(Boolean).join(" ") || undefined;
 
   return (
     <div className={["field", className].filter(Boolean).join(" ")}>

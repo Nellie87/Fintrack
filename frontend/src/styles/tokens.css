@@ -27,6 +27,8 @@
   --color-text-muted: #5b6675;
   --color-text-on-dark: #ffffff;
   --color-text-on-dark-muted: #b8c4d6;
+  --color-border-on-dark: rgb(255 255 255 / 0.35);
+  --color-backdrop: rgb(7 26 51 / 0.55); /* navy-900 scrim behind dialogs */
 
   /* Meaning: gain/loss colours only ever appear next to a + or − sign */
   --color-gain: #12784f;
@@ -35,6 +37,7 @@
   --color-loss-soft: #fdecea;
   --color-danger: #b42318;
   --color-danger-hover: #93201a;
+  --color-danger-border: rgb(180 35 24 / 0.3);
 
   /* Chart palette (allocation donut), navy → teal → greys */
   --chart-1: #0b2545;
