@@ -32,12 +32,24 @@ The demo analyst has three seeded portfolios (two in KES, one in USD) with 22 tr
 
 ## Features
 
-- **Auth:** register and log in; passwords hashed with bcrypt; every other endpoint requires a JWT.
-- **Portfolios:** create, edit and delete client portfolios in KES or USD. Each analyst only ever sees their own.
-- **Transactions:** record BUY/SELL trades; sort and filter by instrument, type and date range; delete with confirmation.
-- **Holdings summary:** per-instrument net quantity, weighted average cost, total invested, market value and signed gain/loss, plus portfolio totals.
+- **Auth:** register and log in; passwords (8+ characters with upper- and lower-case letters and a number) hashed with bcrypt; every other endpoint requires a JWT.
+- **Dashboard:** KPIs across all of an analyst's portfolios: assets under management per currency (KES and USD never mixed), best and weakest performers, largest positions and recent activity.
+- **Portfolios:** create, edit, delete and search client portfolios in KES or USD. Each analyst only ever sees their own.
+- **Transactions:** record BUY/SELL trades; sort, filter (instrument, type, date range) and page through them; export to CSV; delete with confirmation.
+- **Holdings summary:** per-instrument net quantity, weighted average cost, total invested, market value and signed gain/loss, plus portfolio totals and an allocation donut chart.
 - **Validation:** negative quantities, overselling (including back-dated sells), unknown portfolios and deletes that would break a later sell are rejected with the correct status code and one consistent JSON error shape.
-- **UI:** allocation donut chart; loading, empty and error states for every API call; confirmation before every delete; responsive down to 375px; keyboard and screen-reader friendly (WCAG AA contrast).
+- **UI:** light and dark mode from the same design tokens; toast confirmations for every action; loading, empty and error states for every API call; confirmation before every delete; responsive down to 375px; keyboard and screen-reader friendly (WCAG AA contrast in both themes).
+
+### Brief checklist: bonus items
+
+| Bonus item | Where |
+| --- | --- |
+| Backend unit/integration tests + a frontend component test | 34 backend tests, 8 frontend tests ([Tests](#tests)) |
+| Docker Compose for API, frontend and database | [`docker-compose.yml`](docker-compose.yml) ([Run locally](#run-locally)) |
+| CI pipeline running lint and tests | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
+| Automated deployment from `main` (CD) | Vercel redeploys both apps on every push to `main` ([Deployment](#deployment)) |
+| Pagination and CSV export of transactions | `?page=&pageSize=` and `/transactions/export` ([API overview](#api-overview)); paged table and **Export CSV** button in the UI |
+| Dark mode using the same design tokens | [`tokens.css`](frontend/src/styles/tokens.css): same token names, dark values under `data-theme="dark"` |
 
 ## Architecture
 
@@ -55,24 +67,29 @@ The browser only talks to the API. Every request passes the CORS check, then the
 
 ```
 fintrack/
+├─ docker-compose.yml            Postgres + migrate/seed + API + web, one command
+├─ .github/workflows/ci.yml      lint, test and build both apps on every push / PR
 ├─ backend/                      Next.js 16 (route handlers only, no pages)
+│  ├─ Dockerfile                 multi-stage build → standalone Next.js server
 │  ├─ prisma/schema.prisma       users, portfolios, transactions
 │  ├─ prisma/migrations/         SQL migrations
 │  ├─ prisma/seed.ts             demo analyst + portfolios + trades
 │  ├─ public/openapi.yaml        OpenAPI 3 spec (served at /openapi.yaml)
 │  └─ src/
 │     ├─ proxy.ts                CORS (Next 16's name for middleware)
-│     ├─ lib/                    db, auth, errors, schemas, portfolios, transactions, holdings (+ tests)
+│     ├─ lib/                    db, auth, errors, schemas, portfolios, transactions,
+│     │                          holdings, dashboard, csv (+ tests)
 │     └─ app/api/                REST endpoints and the Swagger UI page
 └─ frontend/                     React 19 + Vite SPA
+   ├─ Dockerfile, nginx.conf     production build served by nginx (SPA fallback)
    ├─ vercel.json                SPA rewrite so deep links survive a refresh
    └─ src/
-      ├─ styles/tokens.css       every colour, font size and spacing value, defined once
+      ├─ styles/tokens.css       every colour, font size and spacing value, defined once (light + dark)
       ├─ api/                    fetch client, types, TanStack Query hooks
       ├─ auth/                   session context and route guards
-      ├─ components/             header, tables, forms, chart, dialogs, state views
-      ├─ lib/format.ts           money, signed numbers, dates
-      └─ pages/                  login, register, portfolios, portfolio detail, 404
+      ├─ components/             header, tables, forms, chart, dialogs, toasts, state views (+ tests)
+      ├─ lib/                    formatting, theme, toasts, error messages (+ tests)
+      └─ pages/                  login, register, dashboard, portfolios, portfolio detail, 404
 ```
 
 ### Data model
@@ -103,9 +120,31 @@ Money and quantities are stored as `numeric` and calculated with `decimal.js`, n
 | Charts | Recharts | Accessible donut with a data-table legend |
 | Styling | Plain CSS with custom properties | The brief asks for design tokens "defined once"; `tokens.css` is that single source |
 | Font | Inter (self-hosted via Fontsource) | One clean sans-serif family, no third-party font requests |
+| Tests | Vitest + React Testing Library | Same runner on both sides; component tests interact the way a user does |
+| CI | GitHub Actions | Lint, test and build both apps on every push and pull request |
+| Containers | Docker Compose (Postgres 17, Node 22, nginx) | The whole stack, seeded, with one command and no local Node or Postgres |
 | Hosting | Vercel (API + SPA) and Neon (Postgres) | HTTPS, auto-deploy from `main`, and no cold-start sleep during the 14-day review window. Vercel is not in the brief's example list, but the brief allows any platform; free tiers that sleep (e.g. Render) can take 30–60 s to answer a reviewer's first request. |
 
 ## Run locally
+
+### Option A: Docker Compose (quickest, about 3 minutes)
+
+Needs only [Docker Desktop](https://www.docker.com/products/docker-desktop/). From the repo root:
+
+```bash
+docker compose up --build
+```
+
+| Service | URL | What it does |
+| --- | --- | --- |
+| `web` | http://localhost:8080 | The React app, built and served by nginx |
+| `api` | http://localhost:4000/api/docs | The API (Swagger UI) |
+| `db` | (internal) | PostgreSQL 17, data kept in the `db-data` volume |
+| `migrate` | (runs once) | Applies migrations and seeds the demo analyst, then exits |
+
+Log in with `demo@fintrack.app` / `Demo@2026`. The API uses a throwaway JWT secret by default; set your own with `JWT_SECRET=... docker compose up --build`. Stop with `Ctrl+C`; `docker compose down -v` also deletes the database volume.
+
+### Option B: Node.js and your own Postgres
 
 **Prerequisites:** Node.js 22 LTS or newer (20.19+ also works) and a PostgreSQL database: either a free [Neon](https://neon.tech) project or a local container:
 
@@ -170,12 +209,14 @@ Full, interactive documentation: **https://fintrack-apis.vercel.app/api/docs** (
 | POST | `/api/auth/register` | 201 `{ token, user }` | 409 email taken, 422 invalid |
 | POST | `/api/auth/login` | 200 `{ token, user }` | 401 wrong email or password |
 | GET | `/api/auth/me` | 200 user | 401 |
+| GET | `/api/dashboard` | 200 KPIs per currency, performers, largest positions, recent trades | 401 |
 | GET | `/api/portfolios` | 200 list (with `transactionCount`) | 401 |
 | POST | `/api/portfolios` | 201 portfolio | 422 |
 | GET | `/api/portfolios/{id}` | 200 portfolio | 404 |
 | PUT | `/api/portfolios/{id}` | 200 portfolio | 404, 422 |
 | DELETE | `/api/portfolios/{id}` | 204 (its transactions too) | 404 |
-| GET | `/api/portfolios/{id}/transactions` | 200 list, newest first | 404 |
+| GET | `/api/portfolios/{id}/transactions` | 200 list, newest first; optional `?page=&pageSize=` (total in `X-Total-Count`) | 404, 422 bad page values |
+| GET | `/api/portfolios/{id}/transactions/export` | 200 `text/csv` download, oldest first | 404 |
 | POST | `/api/portfolios/{id}/transactions` | 201 transaction | 404, 422 (incl. selling more than held), 409 |
 | DELETE | `/api/transactions/{id}` | 204 | 404, 422 if a later sell depends on it, 409 |
 | GET | `/api/portfolios/{id}/summary` | 200 holdings + totals | 404 |
@@ -213,20 +254,42 @@ Every endpoint except register, login and health needs `Authorization: Bearer <t
 
 New trades and deletes are validated by replaying the history with the change applied, inside a **serializable** database transaction, so two simultaneous sells can't both pass the check.
 
+**Pagination** keeps the body a plain array (so existing clients are unaffected) and reports the total in the `X-Total-Count` header. **CSV export** quotes fields per RFC 4180 and prefixes text starting with `=`, `+`, `-` or `@` so spreadsheets can't run it as a formula (CSV injection).
+
 ## Tests
 
 ```bash
-cd backend
-npm test
+cd backend && npm test     # 34 tests
+cd frontend && npm test    # 8 tests
 ```
 
-10 Vitest unit tests cover the holdings rules in `backend/src/lib/holdings.test.ts`: single and averaged buys, average cost after a partial sell, oversell (status, code, message and field details), a back-dated sell before its buy, deleting a buy that a later sell depends on, same-day ordering, a fully sold instrument dropping out, portfolio totals with a gain and a loss, and exact decimal arithmetic.
+**Backend (Vitest, no database needed)**
 
-Linting: `npm run lint` in each folder. The frontend's `npm run build` also type-checks.
+| File | Tests | Covers |
+| --- | --- | --- |
+| `src/lib/holdings.test.ts` | 10 | Weighted average cost, partial sells, oversell (status, code, message, field), back-dated sells, deleting a buy a later sell depends on, same-day ordering, fully sold instruments, totals with a gain and a loss, exact decimals |
+| `src/lib/errors.test.ts` | 7 | One error shape for `ApiError`, Zod (422), Prisma conflicts (409) and unexpected errors (500 **without leaking details**); malformed JSON (400); invalid ids (404) |
+| `src/lib/schemas.test.ts` | 6 | Email normalisation, password strength, KES/USD only, ticker upper-casing, negative quantities and future dates rejected |
+| `src/lib/csv.test.ts` | 6 | CSV quoting, formula-injection escaping, pagination parameter rules |
+| `src/lib/dashboard.test.ts` | 5 | Per-currency totals (never mixed), distinct clients, best/worst performers, recent activity, empty dashboard |
+
+**Frontend (Vitest + React Testing Library, jsdom)**
+
+| File | Tests | Covers |
+| --- | --- | --- |
+| `src/components/TransactionForm.test.tsx` | 4 | Field errors on an empty submit, "You currently hold…" before a sell, a valid trade submitted with an upper-case ticker, the API's oversell error shown under Quantity |
+| `src/lib/format.test.ts` | 4 | `KES 1,250,000.00`, signed gains/losses, colour only with a sign, dates |
+
+Linting: `npm run lint` in each folder. The frontend's `npm run build` also type-checks. CI runs all of this on every push.
 
 ## Deployment
 
 Both apps are on Vercel and redeploy automatically on every push to `main`. The database is a Neon Postgres project in Frankfurt (closest region to Nairobi).
+
+**CI/CD**
+
+- **CI:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs `npm ci`, lint, tests and a production build for the backend and the frontend on every push to `main` and every pull request (Node 22).
+- **CD:** each Vercel project is connected to this repository and deploys `main` automatically; pull requests get preview deployments. The API's build command applies any pending Prisma migrations before building, so schema changes ship with the code.
 
 | Part | URL | Vercel settings |
 | --- | --- | --- |
@@ -257,7 +320,8 @@ Secrets exist only in Vercel's environment settings and local, git-ignored `.env
 
 - **JWT in `localStorage`** keeps a session across refreshes with very little code. The risk is that an XSS bug could read it; React's default escaping reduces that risk. An httpOnly cookie with refresh tokens would be stronger.
 - **No refresh tokens or revocation list.** Tokens expire after `JWT_EXPIRES_IN` (8h). `requireUser` re-loads the user on every request, so a deleted account stops working immediately.
-- **Sorting and filtering happen in the browser.** A portfolio's trade list is small and already loaded; server-side pagination would be needed for very large histories.
+- **The UI sorts, filters and pages in the browser.** A portfolio's trade list is small and already loaded, so this is instant. The API already supports `?page=&pageSize=` for when histories grow; switching the table to it would also need server-side sorting and filtering.
+- **Dashboard totals stay per currency.** Without an FX feed, adding KES and USD would be misleading, so assets under management are shown once per currency.
 - **Summary is recalculated on each request** by replaying all trades. That is simple and always correct at this scale; very large portfolios would need cached positions.
 - **Serializable transactions** prevent two concurrent sells from both passing the holdings check, at the cost of an occasional 409 the client must retry.
 - **Two Vercel projects instead of one Next.js app.** It keeps the SPA genuinely separate from the API, as the brief asks, and makes CORS a real, tested boundary.
@@ -269,9 +333,9 @@ Secrets exist only in Vercel's environment settings and local, git-ignored `.env
 - A live price feed for market value, and FX conversion to report USD portfolios in KES.
 - Realised gain/loss on sells, and transaction fees.
 - httpOnly-cookie sessions with refresh tokens; rate limiting on login.
-- Server-side pagination and CSV export of transactions.
-- Docker Compose for API, frontend and database; end-to-end tests (Playwright).
-- Dark mode using the same design tokens.
+- **KYC for clients.** Capture and verify client identity (ID or passport, KRA PIN, proof of address) before a portfolio can trade, with a status per client (pending / verified / rejected) and documents stored securely.
+- **More comprehensive reports.** Performance over time, asset allocation by sector and asset class, period statements per client, and PDF export.
+- **More currencies.** Extend the `Currency` enum beyond KES and USD (e.g. EUR, GBP, UGX, TZS), with a stored exchange rate per trade date so historical values stay correct.
 
 ## AI usage
 
@@ -279,9 +343,28 @@ I used Claude Code, an AI coding assistant, as a pair programmer.
 
 ## Screenshots
 
-| | |
-| --- | --- |
-| Login | ![Login](docs/screenshots/login.png) |
-| Portfolio list | ![Portfolios](docs/screenshots/portfolios.png) |
-| Portfolio detail (desktop) | ![Portfolio detail](docs/screenshots/detail-desktop.png) |
-| Portfolio detail (375px) | ![Portfolio detail on mobile](docs/screenshots/detail-mobile.png) |
+**Login** with the one-click demo account
+
+![Login](docs/screenshots/login.png)
+
+**Dashboard:** KPIs, assets under management per currency
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+**Dashboard:** performance highlights, largest positions and recent activity
+
+![Dashboard activity](docs/screenshots/dashboard-activity.png)
+
+**Portfolios** with search (light and dark mode)
+
+![Portfolios](docs/screenshots/portfolios.png)
+
+![Portfolios in dark mode](docs/screenshots/portfolios-dark.png)
+
+**Portfolio detail:** summary tiles and allocation donut
+
+![Portfolio detail](docs/screenshots/detail-desktop.png)
+
+**Portfolio detail:** holdings and the sortable, filterable transactions table with CSV export
+
+![Holdings and transactions](docs/screenshots/detail-holdings.png)
