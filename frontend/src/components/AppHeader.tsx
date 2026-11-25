@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router";
 import { BrandMark } from "./BrandMark";
 
 type AppHeaderProps = {
@@ -11,13 +12,13 @@ export function AppHeader({ actions }: AppHeaderProps) {
   return (
     <header className="app-header">
       <div className="container app-header__inner">
-        <a className="brand" href="/" aria-label="FinTrack by Finnet Technologies, home">
+        <Link className="brand" to="/" aria-label="FinTrack by Finnet Technologies, home">
           <BrandMark />
           <span className="brand__text">
             <span className="brand__name">FinTrack</span>
             <span className="brand__by">by Finnet Technologies</span>
           </span>
-        </a>
+        </Link>
         {actions && <div className="app-header__actions">{actions}</div>}
       </div>
     </header>

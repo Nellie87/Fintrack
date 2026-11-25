@@ -167,3 +167,21 @@
   color: var(--color-danger);
   border: 1px solid rgb(180 35 24 / 0.3);
 }
+
+/* ---------- Page layout ---------- */
+.page {
+  padding-block: var(--space-8) var(--space-12);
+}
+.page-status {
+  padding: var(--space-12) 0;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+.page-message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+  max-width: 32rem;
+  padding: var(--space-12) 0;
+}
