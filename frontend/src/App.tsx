@@ -1,9 +1,16 @@
+import { AppHeader } from "./components/AppHeader";
+
 function App() {
   return (
-    <main>
-      <h1>FinTrack</h1>
-      <p>by Finnet Technologies</p>
-    </main>
+    <>
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
+      <AppHeader />
+      <main id="main" className="container" style={{ paddingBlock: "var(--space-8)" }}>
+        <h1>Portfolios</h1>
+      </main>
+    </>
   );
 }
 
